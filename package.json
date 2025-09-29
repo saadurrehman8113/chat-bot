@@ -10,6 +10,7 @@
     "typescript": "^5"
   },
   "workspaces": [
-    "packages/*"
+    "packages/client",
+    "packages/server"
   ]
 }
