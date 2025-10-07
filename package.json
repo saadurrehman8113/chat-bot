@@ -16,11 +16,5 @@
   "workspaces": [
     "packages/client",
     "packages/server"
-  ],
-  "dependencies": {
-    "@tailwindcss/vite": "^4.1.13",
-    "openai": "^6.0.0",
-    "tailwindcss": "^4.1.13",
-    "zod": "^4.1.11"
-  }
+  ]
 }
