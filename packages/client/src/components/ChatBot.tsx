@@ -1,18 +1,78 @@
-import { Button } from "./ui/button";
+// Import the arrow up icon for the submit button
 import { FaArrowUp } from "react-icons/fa";
+// Import react-hook-form for form management and validation
+import { useForm } from "react-hook-form";
 
+// Import custom Button component
+import { Button } from "./ui/button";
+
+// Define the shape of the form data
+type formData = {
+  message: string;
+};
+
+/**
+ * ChatBot component - A form interface for users to send messages
+ * Features:
+ * - Text input with validation
+ * - Submit on Enter key (Shift+Enter for new lines)
+ * - Auto-reset after submission
+ */
 const ChatBot = () => {
+  // Initialize form with react-hook-form
+  // register: connects input fields to the form
+  // handleSubmit: form submission handler
+  // reset: clears the form after submission
+  // formState: contains form validation state
+  const { register, handleSubmit, reset, formState } = useForm<formData>();
+
+  /**
+   * Handle form submission
+   * Currently logs the message and resets the form
+   */
+  const onSubmit = (data: formData) => {
+    console.log("message", data);
+    // Clear the form after successful submission
+    reset();
+  };
+
+  /**
+   * Handle keyboard events on the form
+   * Allows submitting with Enter key (without Shift)
+   * Shift+Enter allows multi-line input
+   */
+  const onKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    // Check if Enter is pressed without Shift key
+    if (e.key === "Enter" && !e.shiftKey) {
+      // Prevent default behavior (adding new line)
+      e.preventDefault();
+      // Manually trigger form submission
+      handleSubmit(onSubmit)();
+    }
+  };
+
   return (
-    <div className="flex flex-col gap-2 items-end border-2 p-4 rounded-3xl">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      onKeyDown={onKeyDown}
+      className="flex flex-col gap-2 items-end border-2 p-4 rounded-3xl"
+    >
+      {/* Message input textarea */}
       <textarea
-        maxLength={1000}
+        {...register("message", {
+          required: true, // Field is required
+          validate: (value) => value.trim().length > 0, // Must not be empty/whitespace only
+        })}
+        maxLength={1000} // Limit message length to 1000 characters
         placeholder="Ask anything"
         className="w-full border-0 focus:outline-none resize-none"
       ></textarea>
-      <Button className="rounded-full w-9 h-9">
+
+      {/* Submit button - disabled when form is invalid */}
+      <Button disabled={!formState.isValid} className="rounded-full w-9 h-9">
         <FaArrowUp />
       </Button>
-    </div>
+    </form>
   );
 };
 
