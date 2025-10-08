@@ -1,7 +1,11 @@
+// Import axios for making HTTP requests to the chat API
+import axios from "axios";
 // Import the arrow up icon for the submit button
 import { FaArrowUp } from "react-icons/fa";
 // Import react-hook-form for form management and validation
 import { useForm } from "react-hook-form";
+// Import useRef hook to persist conversation ID across renders
+import { useRef } from "react";
 
 // Import custom Button component
 import { Button } from "./ui/button";
@@ -12,11 +16,13 @@ type formData = {
 };
 
 /**
- * ChatBot component - A form interface for users to send messages
+ * ChatBot component - A form interface for users to send messages to the chat API
  * Features:
  * - Text input with validation
  * - Submit on Enter key (Shift+Enter for new lines)
  * - Auto-reset after submission
+ * - Maintains conversation context using a persistent conversation ID
+ * - Sends messages to /api/chat endpoint
  */
 const ChatBot = () => {
   // Initialize form with react-hook-form
@@ -26,14 +32,28 @@ const ChatBot = () => {
   // formState: contains form validation state
   const { register, handleSubmit, reset, formState } = useForm<formData>();
 
+  // Generate and persist a unique conversation ID for this chat session
+  // Using useRef ensures the ID remains constant across re-renders
+  const conversationId = useRef<string>(crypto.randomUUID());
+
   /**
    * Handle form submission
-   * Currently logs the message and resets the form
+   * Sends the user's message to the chat API and processes the response
+   * @param message - The user's message from the form
    */
-  const onSubmit = (data: formData) => {
-    console.log("message", data);
-    // Clear the form after successful submission
+  const onSubmit = async ({ message }: formData) => {
+    // Clear the form immediately after submission for better UX
     reset();
+
+    // Send the message to the chat API endpoint
+    // Include the conversationId to maintain conversation context
+    const { data } = await axios.post("/api/chat", {
+      message,
+      conversationId: conversationId.current,
+    });
+
+    // Log the API response (will be used to display chat messages)
+    console.log("response", data);
   };
 
   /**
