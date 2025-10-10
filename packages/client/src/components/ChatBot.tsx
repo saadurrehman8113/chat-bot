@@ -5,7 +5,8 @@ import { FaArrowUp } from "react-icons/fa";
 // Import react-hook-form for form management and validation
 import { useForm } from "react-hook-form";
 // Import useRef hook to persist conversation ID across renders
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import ReactMarkDown from "react-markdown";
 
 // Import custom Button component
 import { Button } from "./ui/button";
@@ -15,6 +16,14 @@ type formData = {
   message: string;
 };
 
+type responseData = {
+  message: string;
+};
+
+type responseMessage = {
+  content: string;
+  role: "user" | "bot";
+};
 /**
  * ChatBot component - A form interface for users to send messages to the chat API
  * Features:
@@ -25,6 +34,9 @@ type formData = {
  * - Sends messages to /api/chat endpoint
  */
 const ChatBot = () => {
+  const [messages, setMessages] = useState<responseMessage[]>([]);
+  const [isLoading, setIsLoading] = useState<true | false>(false);
+
   // Initialize form with react-hook-form
   // register: connects input fields to the form
   // handleSubmit: form submission handler
@@ -42,18 +54,28 @@ const ChatBot = () => {
    * @param message - The user's message from the form
    */
   const onSubmit = async ({ message }: formData) => {
+    setMessages((prev: any) => [...prev, { content: message, role: "user" }]);
     // Clear the form immediately after submission for better UX
     reset();
 
+    setIsLoading(true);
+
     // Send the message to the chat API endpoint
     // Include the conversationId to maintain conversation context
-    const { data } = await axios.post("/api/chat", {
+    const { data } = await axios.post<responseData>("/api/chat", {
       message,
       conversationId: conversationId.current,
     });
 
+    setMessages((prev: any) => [
+      ...prev,
+      { content: data.message, role: "bot" },
+    ]);
+
+    setIsLoading(false);
+
     // Log the API response (will be used to display chat messages)
-    console.log("response", data);
+    console.log("response", data.message);
   };
 
   /**
@@ -72,27 +94,50 @@ const ChatBot = () => {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      onKeyDown={onKeyDown}
-      className="flex flex-col gap-2 items-end border-2 p-4 rounded-3xl"
-    >
-      {/* Message input textarea */}
-      <textarea
-        {...register("message", {
-          required: true, // Field is required
-          validate: (value) => value.trim().length > 0, // Must not be empty/whitespace only
-        })}
-        maxLength={1000} // Limit message length to 1000 characters
-        placeholder="Ask anything"
-        className="w-full border-0 focus:outline-none resize-none"
-      ></textarea>
+    <div>
+      <div className="flex flex-col gap-3 mb-10">
+        {messages.map((message, index) => (
+          <p
+            className={`px-3 py-1 rounded-xl ${
+              message.role === "user"
+                ? "self-end bg-blue-600 text-white"
+                : "self-start bg-gray-200 text-black"
+            }`}
+            key={index}
+          >
+            <ReactMarkDown>{message.content}</ReactMarkDown>
+          </p>
+        ))}
 
-      {/* Submit button - disabled when form is invalid */}
-      <Button disabled={!formState.isValid} className="rounded-full w-9 h-9">
-        <FaArrowUp />
-      </Button>
-    </form>
+        {isLoading && (
+          <div className="flex gap-1 bg-gray-200 px-3 py-3 rounded-full self-start ">
+            <div className="w-2 h-2 rounded-full bg-gray-800 animate-pulse "></div>
+            <div className="w-2 h-2 rounded-full bg-gray-800 animate-pulse [animation-delay:0.2s]"></div>
+            <div className="w-2 h-2 rounded-full bg-gray-800 animate-pulse [animation-delay:0.2s]"></div>
+          </div>
+        )}
+      </div>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        onKeyDown={onKeyDown}
+        className="flex flex-col gap-2 items-end border-2 p-4 rounded-3xl"
+      >
+        {/* Message input textarea */}
+        <textarea
+          {...register("message", {
+            required: true, // Field is required
+            validate: (value) => value.trim().length > 0, // Must not be empty/whitespace only
+          })}
+          maxLength={1000} // Limit message length to 1000 characters
+          placeholder="Ask anything"
+          className="w-full border-0 focus:outline-none resize-none"
+        ></textarea>
+        {/* Submit button - disabled when form is invalid */}
+        <Button disabled={!formState.isValid} className="rounded-full w-9 h-9">
+          <FaArrowUp />
+        </Button>
+      </form>
+    </div>
   );
 };
 

@@ -18,6 +18,7 @@
     "packages/server"
   ],
   "dependencies": {
-    "react-hook-form": "^7.64.0"
+    "react-hook-form": "^7.64.0",
+    "react-markdown": "^10.1.0"
   }
 }
