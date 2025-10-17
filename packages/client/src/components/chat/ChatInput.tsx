@@ -7,23 +7,32 @@ export type ChatFormData = {
   message: string;
 };
 
-const ChatInput = () => {
-  const { register, handleSubmit, formState } = useForm<ChatFormData>();
+type Props = {
+  onSubmit: (data: ChatFormData) => void;
+};
 
-  const onKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+const ChatInput = ({ onSubmit }: Props) => {
+  const { register, handleSubmit, reset, formState } = useForm<ChatFormData>();
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
     // Check if Enter is pressed without Shift key
     if (e.key === "Enter" && !e.shiftKey) {
       // Prevent default behavior (adding new line)
       e.preventDefault();
       // Manually trigger form submission
-      handleSubmit(onSubmit)();
+      submit();
     }
   };
 
+  const submit = handleSubmit((data) => {
+    reset({ message: "" });
+    onSubmit(data);
+  });
+
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
-      onKeyDown={onKeyDown}
+      onSubmit={submit}
+      onKeyDown={handleKeyDown}
       className="flex flex-col gap-2 items-end border-2 p-4 rounded-3xl"
     >
       <textarea
