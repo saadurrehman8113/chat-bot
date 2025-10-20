@@ -1,6 +1,7 @@
 import Groq from "groq-sdk";
 
 import { conversationRepository } from "../repositories/conversation.repository";
+import instructions from "../prompts/chatbot.txt";
 
 const client = new Groq({
   apiKey: process.env.LLM_API_KEY,
@@ -19,6 +20,10 @@ export const conversationService = {
     const response = await client.chat.completions.create({
       model: process.env.LLM_MODEL as string,
       messages: [
+        {
+          role: "system",
+          content: (instructions as unknown as string) || "",
+        },
         {
           role: "user",
           content: message,
